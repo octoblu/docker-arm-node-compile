@@ -4,8 +4,9 @@ clone_repository(){
   local git_repository="$1"
   local git_ref="$2"
 
-  git clone "$git_repository" .
-  git checkout "$git_ref"
+  git clone "$git_repository" . \
+  && git checkout "$git_ref" \
+  && rm -rf .git
 }
 
 export_tar_gz(){
