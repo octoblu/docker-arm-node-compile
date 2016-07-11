@@ -15,4 +15,4 @@ RUN curl -sL "https://deb.nodesource.com/setup_5.x" \
     |  bash - \
     && apt-get install nodejs -y
 
-COPY install.sh .
+COPY compile.sh .
