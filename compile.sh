@@ -31,7 +31,7 @@ install_apt_dependencies(){
 }
 
 install_dependencies(){
-  npm install --silent
+  /opt/node/bin/npm install --silent
 }
 
 prepare_environment(){
