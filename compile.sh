@@ -1,17 +1,29 @@
 #!/bin/bash
 
-clone_repository(){
-  local git_repository="$1"
-  local git_ref="$2"
+escape(){
+  local str="$1"
 
-  git clone "$git_repository" . \
-  && git checkout "$git_ref" \
-  && rm -rf .git
+  # "path/to/file" -> "path\/to\/file"
+  echo "$str" | sed --expression 's|/|\\\/|g'
 }
 
 export_tar_gz(){
-  cd /usr/src \
-  && tar -czf /export/app-linux-arm.tar.gz app
+  local src_dir="$1"
+  local output_dir="$2"
+  local parent_directory="$(dirname "$src_dir")"
+  local directory_name="$(basename "$src_dir")"
+
+  pushd "$parent_directory" \
+  && tar \
+    --create \
+    --gzip \
+    --transform "s/${directory_name}/app/" \
+    --file "${output_dir}/app-linux-arm.tar.gz" \
+    "${directory_name}"
+
+  local exit_code=$?
+  popd
+  return $exit_code
 }
 
 fatal(){
@@ -20,34 +32,31 @@ fatal(){
   exit 1
 }
 
-install_apt_dependencies(){
-  local apt_dependencies="$@"
+fix_build_paths(){
+  local build_paths="$(find . -type d -name 'node-*-linux-x64')"
 
-  if [ -z "$apt_dependencies" ]; then
-    return
-  fi
-
-  apt-get install $apt_dependencies # intentionally unquoted
+  rename -e 's/linux-x64/linux-arm/' $build_paths # intentionally unquoted
 }
 
 install_dependencies(){
-  /opt/node/bin/npm install --silent
+  npm_install \
+  && fix_build_paths
 }
 
-prepare_environment(){
-  mkdir -p /usr/src/app \
-  && cd /usr/src/app
+npm_install(){
+  env \
+    npm_config_arch=arm \
+    CC=arm-linux-gnueabihf-gcc-4.9 \
+    CXX=arm-linux-gnueabihf-g++-4.9 \
+    /opt/node/bin/npm install --build-from-source
+
 }
 
 main(){
-  local git_repository="$1"; shift
-  local git_ref="$1"; shift
-  local apt_dependencies="$@"
+  local src_dir="$1"
+  local output_dir="$2"
 
-  prepare_environment                           || fatal "Failed to prepare environment"
-  install_apt_dependencies "$apt_dependencies"  || fatal "Failed to install apt dependencies"
-  clone_repository "$git_repository" "$git_ref" || fatal "Failed to clone repository"
   install_dependencies || fatal "Failed to install dependencies"
-  export_tar_gz        || fatal "Failed to export package"
+  export_tar_gz "$src_dir" "$output_dir" || fatal "Failed to export package"
 }
 main $@
