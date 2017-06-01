@@ -2,11 +2,15 @@ FROM multiarch/crossbuild
 MAINTAINER Octoblu, Inc. <docker@octoblu.com>
 
 RUN dpkg --add-architecture armhf
+RUN apt-add
 RUN apt-get update \
   && apt-get install -y \
     libusb-1.0-0-dev:armhf \
     libbluetooth-dev:armhf \
     libudev-dev:armhf
+
+RUN curl -L http://archive.raspberrypi.org/debian/pool/main/p/pigpio/pigpio_1.60-1_armhf.deb \
+  && dpkg -i pigpio_1.60-1_armhf.deb
 
 RUN mkdir -p /opt/node
 RUN curl -L https://nodejs.org/dist/latest-v5.x/node-v5.12.0-linux-x64.tar.gz | tar --strip 1 -xz -C /opt/node
