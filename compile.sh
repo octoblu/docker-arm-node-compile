@@ -10,16 +10,15 @@ escape(){
 export_tar_gz(){
   local src_dir="$1"
   local output_dir="$2"
-  local parent_directory="$(dirname "$src_dir")"
-  local directory_name="$(basename "$src_dir")"
+  # local parent_directory="$(dirname "$src_dir")"
+  # local directory_name="$(basename "$src_dir")"
 
-  pushd "$parent_directory" \
+  pushd "$src_dir" \
   && tar \
     --create \
     --gzip \
-    --transform "s/${directory_name}/app/" \
     --file "${output_dir}/app-linux-arm.tar.gz" \
-    "${directory_name}"
+    "."
 
   local exit_code=$?
   popd
